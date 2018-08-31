@@ -134,6 +134,8 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   double v = state[3];
   double cte = state[4];
   double epsi = state[5];
+  double delta = state[6];
+  double a = state[7];
 
   // number of independent variables
   // N timesteps == N - 1 actuations
@@ -147,13 +149,23 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   for (size_t i = 0; i < n_vars; i++) {
     vars[i] = 0.0;
   }
-  // Set the initial variable values
-  /*vars[x_start] = x;
-  vars[y_start] = y;
-  vars[psi_start] = psi;
-  vars[v_start] = v;
-  vars[cte_start] = cte;
-  vars[epsi_start] = epsi;*/
+  // Set the initial variable values, handling latency where dt = 100ms
+  // x_[t+1] = x[t] + v[t] * cos(psi[t]) * dt
+  // y_[t+1] = y[t] + v[t] * sin(psi[t]) * dt
+  // psi_[t+1] = psi[t] + v[t] / Lf * delta[t] * dt
+  // v_[t+1] = v[t] + a[t] * dt
+  // cte[t+1] = f(x[t]) - y[t] + v[t] * sin(epsi[t]) * dt
+  // epsi[t+1] = psi[t] - psides[t] + v[t] * delta[t] / Lf * dt
+  double f = coeffs[0] + coeffs[1] * x + coeffs[2] * x * x + coeffs[3] * x * x * x;
+  double psides = CppAD::atan(3*coeffs[3] * x * x + 2*coeffs[2] * x + coeffs[1]);
+
+
+  vars[x_start] = x + v * cos(psi) * dt;
+  vars[y_start] = y + v * sin(psi) * dt;
+  vars[psi_start] = psi + v / Lf * delta * dt;
+  vars[v_start] = v + a * dt;
+  vars[cte_start] = cte - ((f - y) + (v * sin(epsi) * dt));
+  vars[epsi_start] = psi - psides + v * delta / Lf * dt;
 
   // Lower and upper limits for x
   Dvector vars_lowerbound(n_vars);

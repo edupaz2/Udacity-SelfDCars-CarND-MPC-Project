@@ -107,8 +107,8 @@ int main() {
           double py = j[1]["y"];
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
-          double steer_value = j[1]["steering_angle"];
-          double throttle_value = j[1]["throttle"];
+          double steering = j[1]["steering_angle"];
+          double throttle = j[1]["throttle"];
 
           // Velocity to m/h
           v *= MphToMs;
@@ -135,8 +135,8 @@ int main() {
           //double epsi = psi - atan(coeffs[1] + 2*px*coeffs[2] + 3*px*px*coeffs[3]);
           double epsi = psi - atan(coeffs[1]);
 
-          Eigen::VectorXd state(6);
-          state << px, py, psi, v, cte, epsi;
+          Eigen::VectorXd state(8);
+          state << px, py, psi, v, cte, epsi, steering, throttle;
 
           std::cout << "==> STATE => PX=" << px << ", PY=" << py << ", PSI=" << psi << ", V=" << v << ", CTE=" << cte << ", EPSI=" << epsi << std::endl;
 
@@ -148,15 +148,15 @@ int main() {
           * Both are in between [-1, 1].
           *
           */
-          steer_value = -vars[0] / DeltaUpperBound;
-          throttle_value = vars[1];
-          std::cout << "===> STEER=" << vars[0] << " (" << steer_value << "), A=" << vars[1] << std::endl;
+          steering = -vars[0] / DeltaUpperBound;
+          throttle = vars[1];
+          std::cout << "===> STEER=" << vars[0] << " (" << steering << "), A=" << vars[1] << std::endl;
 
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
           // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
-          msgJson["steering_angle"] = steer_value;
-          msgJson["throttle"] = throttle_value;
+          msgJson["steering_angle"] = steering;
+          msgJson["throttle"] = throttle;
 
           // Display the MPC predicted trajectory 
           vector<double> mpc_x_vals;

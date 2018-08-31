@@ -28,7 +28,7 @@ Self-Driving Car Engineer Nanodegree Program
   * Preprocessing of the waypoints: in order to simplify our reference coordinate system, I make the variables (x, y, psi)  be zero. In order to do that I have to change the reference coordinate system to all waypoints (translation and rotation).
   * A 3rd order polynomial is fitted to the 6 waypoints given by using the `function polyfit`.
 * Model Predictive Control with Latency
-  * There is no extra functionality for dealing with latency besides the provided one: this_thread::sleep_for(chrono::milliseconds(100));
+  * Before calling the Solver, I'm using the model equations to initializate the initial state to time t+dt being dt the latency (100ms).
 
 * Note on the cost function:
 I started tuning my parameters with the idea of giving more importance to the delta rate change. That´s why it´s value is mutiplied by a high number compared to the other parameters involved.
