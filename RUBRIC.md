@@ -19,8 +19,8 @@ Self-Driving Car Engineer Nanodegree Program
 
 * Timestep and Elapsed Duration (N & dt)
   * N=20
-  * dt=0.05
-  * The values were chosen to look forward 1 second into the future.
+  * dt=0.1
+  * The values were chosen to look forward 2 seconds into the future.
   * Other values tested were:
     * N=10, dt=0.1.
     * N=25, dt=0.05.
@@ -29,3 +29,7 @@ Self-Driving Car Engineer Nanodegree Program
   * A 3rd order polynomial is fitted to the 6 waypoints given by using the `function polyfit`.
 * Model Predictive Control with Latency
   * There is no extra functionality for dealing with latency besides the provided one: this_thread::sleep_for(chrono::milliseconds(100));
+
+* Note on the cost function:
+I started tuning my parameters with the idea of giving more importance to the delta rate change. That´s why it´s value is mutiplied by a high number compared to the other parameters involved.
+I also noticed a huge improvement by adding more timesteps (into the future) at the solver.

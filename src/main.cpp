@@ -12,8 +12,6 @@
 // for convenience
 using json = nlohmann::json;
 
-const double Lf = 2.67;
-
 // For converting back and forth between radians and degrees.
 constexpr double pi() { return M_PI; }
 double deg2rad(double x) { return x * pi() / 180; }
@@ -67,6 +65,22 @@ Eigen::VectorXd polyfit(Eigen::VectorXd xvals, Eigen::VectorXd yvals,
   return result;
 }
 
+void bringToZeroCoordinate(vector<double>& ptsx, vector<double>& ptsy, const double psi, const double px, const double py)
+{
+  // Simplify our reference coordinate system (x, y, psi) by making them all zero.
+  // This implies translate and rotate the waypoints values.
+  for(unsigned int i = 0; i < ptsx.size(); ++i)
+  {
+    // Substract current position to the waypoints, so the are (0,0) centered
+    double shift_x = ptsx[i] - px;
+    double shift_y = ptsy[i] - py;
+
+    // Make psi also zero, by rotating the waypoints
+    ptsx[i] = shift_x*cos(0-psi) - shift_y*sin(0-psi);
+    ptsy[i] = shift_x*sin(0-psi) + shift_y*cos(0-psi);
+  }
+}
+
 int main() {
   uWS::Hub h;
 
@@ -96,18 +110,12 @@ int main() {
           double steer_value = j[1]["steering_angle"];
           double throttle_value = j[1]["throttle"];
 
+          // Velocity to m/h
+          v *= MphToMs;
+
           // Simplify our reference coordinate system (x, y, psi) by making them all zero.
           // This implies translate and rotate the waypoints values.
-          for(unsigned int i = 0; i < ptsx.size(); ++i)
-          {
-            // Substract current position to the waypoints, so the are (0,0) centered
-            double shift_x = ptsx[i] - px;
-            double shift_y = ptsy[i] - py;
-
-            // Make psi also zero, by rotating the waypoints
-            ptsx[i] = shift_x*cos(0-psi) - shift_y*sin(0-psi);
-            ptsy[i] = shift_x*sin(0-psi) + shift_y*cos(0-psi);
-          }
+          bringToZeroCoordinate(ptsx, ptsy, psi, px, py);
           px = 0; py = 0; psi = 0;
 
           double* ptrx = &ptsx[0];
@@ -140,7 +148,7 @@ int main() {
           * Both are in between [-1, 1].
           *
           */
-          steer_value = -vars[0] / (0.436332*Lf); //deg2rad(25);
+          steer_value = -vars[0] / DeltaUpperBound;
           throttle_value = vars[1];
           std::cout << "===> STEER=" << vars[0] << " (" << steer_value << "), A=" << vars[1] << std::endl;
 
@@ -148,7 +156,7 @@ int main() {
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
           // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
           msgJson["steering_angle"] = steer_value;
-          msgJson["throttle"] = throttle_value;//0.25
+          msgJson["throttle"] = throttle_value;
 
           // Display the MPC predicted trajectory 
           vector<double> mpc_x_vals;
